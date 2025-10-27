@@ -1,0 +1,37 @@
+name: Save Christmas Wish
+
+on:
+  repository_dispatch:
+    types: [save-wish]
+
+permissions:
+  contents: write
+
+jobs:
+  update-messages:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repo
+        uses: actions/checkout@v4
+
+      - name: Update messages.json
+        run: |
+          echo "$PAYLOAD" > wish.json
+          node <<EOF
+          const fs = require('fs');
+          let wishes = JSON.parse(fs.readFileSync('messages.json', 'utf8'));
+          let newWish = JSON.parse(fs.readFileSync('wish.json', 'utf8'));
+          wishes.push(newWish);
+          fs.writeFileSync('messages.json', JSON.stringify(wishes, null, 2));
+          EOF
+
+      - name: Commit changes
+        run: |
+          git config user.name "github-actions"
+          git config user.email "actions@github.com"
+          git add messages.json
+          git commit -m "New wish added" || echo "No changes"
+          git push
+
+    env:
+      PAYLOAD: ${{ github.event.client_payload.wish }}
