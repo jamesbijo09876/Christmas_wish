@@ -12,7 +12,6 @@
     --bg-1: #0b1320;
     --bg-2: #2b1b3b;
     --accent: #ffd166;
-    --muted: rgba(255,255,255,0.8);
   }
 
   html,body{
@@ -37,116 +36,168 @@
     overflow:hidden;
   }
 
-  .top-row{display:flex;justify-content:space-between;align-items:flex-start;gap:24px;flex-wrap:wrap;}
   h1{font-family:"Playfair Display";font-weight:900;margin:0;line-height:0.92;font-size:clamp(36px,8vw,84px);color:white;}
-
   p.lead{margin:18px 0 28px;opacity:0.95;font-size:1.05rem;}
   #countdown{font-size:1.3rem;margin:16px 0 28px;font-weight:600;color:#ffd166;}
 
-  footer{margin-top:26px;font-size:0.85rem;color:rgba(255,255,255,0.65);display:flex;justify-content:flex-end;}
+  footer{margin-top:26px;font-size:0.85rem;color:rgba(255,255,255,0.65);display:flex;justify-content:space-between;align-items:center;gap:12px;}
+
+  button{
+    padding:10px 20px;
+    border:0;
+    border-radius:8px;
+    background:var(--accent);
+    color:#222;
+    font-weight:600;
+    cursor:pointer;
+    font-size:0.95rem;
+  }
 
   #snow-canvas{position:fixed;inset:0;z-index:0;pointer-events:none;}
+
+  /* MODAL */
+  .modal{
+    display:none;
+    position:fixed;
+    inset:0;
+    background:rgba(0,0,0,0.7);
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    z-index:999;
+  }
+  .modal-box{
+    background:#1b1b2f;
+    padding:24px;
+    width:min(380px,90%);
+    border-radius:14px;
+    text-align:center;
+  }
+  .modal-box input, .modal-box textarea{
+    width:100%;
+    margin:8px 0;
+    padding:10px;
+    border-radius:6px;
+    border:0;
+  }
 </style>
 </head>
 <body>
 
 <canvas id="snow-canvas"></canvas>
 
-<!-- ✅ BACKGROUND MUSIC ADDED HERE -->
-<audio id="bg-music" autoplay loop muted>
-  <source src="assets/audio/polar-express.mp3" type="audio/mp3">
-</audio>
-
 <div class="wrap">
   <div class="card" role="main">
-    <div class="top-row">
-      <div>
-        <h1>Merry Christmas 🎄</h1>
-        <p class="lead">The gift of love. The gift of peace. The gift of happiness. May all these be yours at Christmas.</p>
-        <div id="countdown"></div>
-      </div>
-    </div>
+
+    <!-- Wish Display if link has data -->
+    <h1 id="wish-title">Merry Christmas 🎄</h1>
+    <p class="lead" id="wish-lead">BE HELP BE HOPE</p>
+    <div id="countdown"></div>
 
     <footer>
       <div>Made by <a href="#" style="color:white;text-decoration:none;">Bijo</a></div>
+      <button id="openModal">Send Christmas Wish 🎁</button>
     </footer>
   </div>
 </div>
 
+<!-- Modal -->
+<div class="modal" id="wishModal">
+  <div class="modal-box">
+    <h3>Create Christmas Wish</h3>
+    <input id="toInput" placeholder="To:" />
+    <textarea id="msgInput" placeholder="Your Christmas Message"></textarea>
+    <input id="fromInput" placeholder="From:" />
+    <button id="createLink">Create Link & Copy</button>
+  </div>
+</div>
+
 <script>
-// COUNTDOWN SCRIPT ✅
+// COUNTDOWN
 function updateCountdown() {
   const christmas = new Date("December 25, 2025 00:00:00").getTime();
   const now = new Date().getTime();
   const diff = christmas - now;
 
-  if (diff <= 0) {
+  if(diff <= 0){
     document.getElementById("countdown").innerHTML = "🎅 Merry Christmas! 🎄";
     return;
   }
 
-  const days = Math.floor(diff / (1000*60*60*24));
-  const hours = Math.floor((diff % (1000*60*60*24)) / (1000*60*60));
-  const mins = Math.floor((diff % (1000*60*60)) / (1000*60));
-  const secs = Math.floor((diff % (1000*60)) / 1000);
+  const d = Math.floor(diff/(1000*60*60*24));
+  const h = Math.floor((diff%(1000*60*60*24))/(1000*60*60));
+  const m = Math.floor((diff%(1000*60*60))/(1000*60));
+  const s = Math.floor((diff%(1000*60))/1000);
 
-  document.getElementById("countdown").innerHTML =
-    `${days}d ${hours}h ${mins}m ${secs}s`;
+  document.getElementById("countdown").innerHTML = `${d}d ${h}h ${m}m ${s}s`;
 }
-setInterval(updateCountdown, 1000);
+setInterval(updateCountdown,1000);
 updateCountdown();
 
-// SNOWFALL SCRIPT ✅
-const canvas = document.getElementById("snow-canvas");
-const ctx = canvas.getContext("2d");
-let w = canvas.width = window.innerWidth;
-let h = canvas.height = window.innerHeight;
+// SNOW
+const canvas=document.getElementById("snow-canvas");
+const ctx=canvas.getContext("2d");
+let w=canvas.width=window.innerWidth;
+let h=canvas.height=window.innerHeight;
 
-window.addEventListener("resize", () => {
-  w = canvas.width = window.innerWidth;
-  h = canvas.height = window.innerHeight;
-});
+window.addEventListener("resize",()=>{w=canvas.width=window.innerWidth;h=canvas.height=window.innerHeight;});
 
-const snowflakes = [];
-for(let i = 0; i < 150; i++) {
-  snowflakes.push({
-    x: Math.random() * w,
-    y: Math.random() * h,
-    r: Math.random() * 3 + 1,
-    d: Math.random() + 1
-  });
+const snowflakes=[];
+for(let i=0;i<150;i++){
+ snowflakes.push({x:Math.random()*w,y:Math.random()*h,r:Math.random()*3+1,d:Math.random()+1});
 }
+function drawSnow(){
+ ctx.clearRect(0,0,w,h);
+ ctx.fillStyle="white";
+ ctx.beginPath();
+ snowflakes.forEach(f=>{
+  ctx.moveTo(f.x,f.y);
+  ctx.arc(f.x,f.y,f.r,0,Math.PI*2);
+ });
+ ctx.fill();
+ moveSnow();
+}
+function moveSnow(){
+ snowflakes.forEach(f=>{
+  f.y+=Math.pow(f.d,2);
+  if(f.y>h){f.y=0;f.x=Math.random()*w;}
+ });
+}
+setInterval(drawSnow,33);
 
-function drawSnow() {
-  ctx.clearRect(0, 0, w, h);
-  ctx.fillStyle = "white";
-  ctx.beginPath();
-  for(let f of snowflakes) {
-    ctx.moveTo(f.x, f.y);
-    ctx.arc(f.x, f.y, f.r, 0, Math.PI * 2);
+// MODAL
+const modal=document.getElementById("wishModal");
+document.getElementById("openModal").onclick=()=>modal.style.display="flex";
+modal.onclick=(e)=>{if(e.target==modal)modal.style.display="none";};
+
+// CREATE SHARE LINK
+document.getElementById("createLink").onclick=()=>{
+  const to=document.getElementById("toInput").value.trim();
+  const msg=document.getElementById("msgInput").value.trim();
+  const from=document.getElementById("fromInput").value.trim();
+  
+  if(!to || !msg || !from){
+    alert("Please fill all fields.");
+    return;
   }
-  ctx.fill();
-  moveSnow();
+
+  const url = new URL(window.location.href);
+  url.searchParams.set("to", to);
+  url.searchParams.set("msg", msg);
+  url.searchParams.set("from", from);
+
+  navigator.clipboard.writeText(url.toString());
+  alert("Link created and copied!");
+  modal.style.display="none";
+};
+
+// DISPLAY SHARED MESSAGE
+const params=new URLSearchParams(window.location.search);
+if(params.has("msg")){
+ document.getElementById("countdown").style.display="none";
+ document.getElementById("wish-title").innerText=`To: ${params.get("to")}`;
+ document.getElementById("wish-lead").innerText=params.get("msg") + `\n\nFrom: ${params.get("from")}`;
 }
-
-function moveSnow() {
-  for(let f of snowflakes) {
-    f.y += Math.pow(f.d, 2);
-    if(f.y > h) {
-      f.y = 0;
-      f.x = Math.random() * w;
-    }
-  }
-}
-
-setInterval(drawSnow, 33);
-
-// ✅ ENABLE SOUND AFTER USER INTERACTION
-window.addEventListener("click", () => {
-  const music = document.getElementById("bg-music");
-  music.muted = false;
-  music.play();
-}, { once: true });
 </script>
 
 </body>
