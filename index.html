@@ -52,6 +52,11 @@
 
 <canvas id="snow-canvas"></canvas>
 
+<!-- ✅ BACKGROUND MUSIC ADDED HERE -->
+<audio id="bg-music" autoplay loop muted>
+  <source src="assets/audio/polar-express.mp3" type="audio/mp3">
+</audio>
+
 <div class="wrap">
   <div class="card" role="main">
     <div class="top-row">
@@ -135,6 +140,13 @@ function moveSnow() {
 }
 
 setInterval(drawSnow, 33);
+
+// ✅ ENABLE SOUND AFTER USER INTERACTION
+window.addEventListener("click", () => {
+  const music = document.getElementById("bg-music");
+  music.muted = false;
+  music.play();
+}, { once: true });
 </script>
 
 </body>
