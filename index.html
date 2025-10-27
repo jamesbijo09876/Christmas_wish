@@ -35,35 +35,108 @@
     backdrop-filter:blur(6px);
     position:relative;
     overflow:hidden;
+    z-index:5;
   }
 
   .top-row{display:flex;justify-content:space-between;align-items:flex-start;gap:24px;flex-wrap:wrap;}
   h1{font-family:"Playfair Display";font-weight:900;margin:0;line-height:0.92;font-size:clamp(36px,8vw,84px);color:white;}
 
   p.lead{margin:18px 0 28px;opacity:0.95;font-size:1.05rem;}
-  #countdown{font-size:1.3rem;margin:16px 0 28px;font-weight:600;color:#ffd166;}
+  #countdown{font-size:1.4rem;margin:16px 0 20px;font-weight:600;color:#ffd166;}
+
+  button{
+    background:var(--accent);
+    color:black;
+    border:none;
+    padding:12px 22px;
+    cursor:pointer;
+    border-radius:12px;
+    font-weight:600;
+    font-size:1rem;
+  }
+
+  button:hover{
+    background:white;
+    color:black;
+  }
 
   footer{margin-top:26px;font-size:0.85rem;color:rgba(255,255,255,0.65);display:flex;justify-content:flex-end;}
 
   #snow-canvas{position:fixed;inset:0;z-index:0;pointer-events:none;}
+
+  /* MODAL */
+  #wishModal {
+    display:none;
+    position:fixed;
+    inset:0;
+    background:rgba(0,0,0,0.7);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    z-index:10;
+  }
+
+  .modal-content {
+    background:rgba(255,255,255,0.1);
+    padding:32px;
+    border-radius:16px;
+    width:90%;
+    max-width:480px;
+    backdrop-filter:blur(10px);
+    text-align:center;
+  }
+
+  input, textarea {
+    width:100%;
+    padding:10px;
+    margin:12px 0;
+    border-radius:10px;
+    border:none;
+    outline:none;
+  }
+
+  #shareLinkSection {
+    margin-top:12px;
+    display:none;
+  }
 </style>
 </head>
 <body>
 
 <canvas id="snow-canvas"></canvas>
 
-<!-- ✅ BACKGROUND MUSIC ADDED HERE -->
 <audio id="bg-music" autoplay loop muted>
   <source src="assets/audio/polar-express.mp3" type="audio/mp3">
 </audio>
+
+<!-- ✅ MESSAGE POPUP MODAL -->
+<div id="wishModal">
+  <div class="modal-content">
+    <h3>Create Your Christmas Wish 🎁</h3>
+    <textarea id="wishText" placeholder="Your Christmas Message 🎄"></textarea>
+    <input id="wishFrom" type="text" placeholder="From 🎅" />
+
+    <button id="generateBtn">Generate Share Link</button>
+
+    <div id="shareLinkSection">
+      <p>Share this link:</p>
+      <input type="text" id="shareLink" readonly />
+    </div>
+
+    <button onclick="closeModal()" style="margin-top:10px;background:#ccc;">Close</button>
+  </div>
+</div>
 
 <div class="wrap">
   <div class="card" role="main">
     <div class="top-row">
       <div>
-        <h1>Merry Christmas 🎄</h1>
+        <h1 id="dynamicMessage">Merry Christmas 🎄</h1>
         <p class="lead">The gift of love. The gift of peace. The gift of happiness. May all these be yours at Christmas.</p>
         <div id="countdown"></div>
+
+        <!-- ✅ NEW BUTTON -->
+        <button onclick="openModal()">✨ Create Christmas Wish ✨</button>
       </div>
     </div>
 
@@ -74,79 +147,62 @@
 </div>
 
 <script>
-// COUNTDOWN SCRIPT ✅
+// COUNTDOWN
 function updateCountdown() {
   const christmas = new Date("December 25, 2025 00:00:00").getTime();
   const now = new Date().getTime();
   const diff = christmas - now;
-
-  if (diff <= 0) {
-    document.getElementById("countdown").innerHTML = "🎅 Merry Christmas! 🎄";
-    return;
-  }
-
-  const days = Math.floor(diff / (1000*60*60*24));
-  const hours = Math.floor((diff % (1000*60*60*24)) / (1000*60*60));
-  const mins = Math.floor((diff % (1000*60*60)) / (1000*60));
-  const secs = Math.floor((diff % (1000*60)) / 1000);
+  const days = Math.floor(diff/(1000*60*60*24));
+  const hours = Math.floor((diff%(1000*60*60*24))/(1000*60*60));
+  const mins = Math.floor((diff%(1000*60*60))/(1000*60));
+  const secs = Math.floor((diff%(1000*60))/1000);
 
   document.getElementById("countdown").innerHTML =
     `${days}d ${hours}h ${mins}m ${secs}s`;
 }
-setInterval(updateCountdown, 1000);
+setInterval(updateCountdown,1000);
 updateCountdown();
 
-// SNOWFALL SCRIPT ✅
-const canvas = document.getElementById("snow-canvas");
-const ctx = canvas.getContext("2d");
-let w = canvas.width = window.innerWidth;
-let h = canvas.height = window.innerHeight;
+// SNOWFALL
+const canvas=document.getElementById("snow-canvas");
+const ctx=canvas.getContext("2d");
+let w=canvas.width=window.innerWidth;
+let h=canvas.height=window.innerHeight;
+window.addEventListener("resize",()=>{w=canvas.width=window.innerWidth;h=canvas.height=window.innerHeight;});
+const snowflakes=[];
+for(let i=0;i<150;i++){snowflakes.push({x:Math.random()*w,y:Math.random()*h,r:Math.random()*3+1,d:Math.random()+1});}
+function drawSnow(){ctx.clearRect(0,0,w,h);ctx.fillStyle="white";ctx.beginPath();for(let f of snowflakes){ctx.moveTo(f.x,f.y);ctx.arc(f.x,f.y,f.r,0,Math.PI*2);}ctx.fill();moveSnow();}
+function moveSnow(){for(let f of snowflakes){f.y+=Math.pow(f.d,2);if(f.y>h){f.y=0;f.x=Math.random()*w;}}}
+setInterval(drawSnow,33);
 
-window.addEventListener("resize", () => {
-  w = canvas.width = window.innerWidth;
-  h = canvas.height = window.innerHeight;
+// ENABLE SOUND AFTER FIRST INTERACTION
+window.addEventListener("click",()=>{
+  const music=document.getElementById("bg-music");
+  music.muted=false;
+  music.play();
+},{once:true});
+
+// ✅ MODAL FUNCTIONS
+function openModal(){document.getElementById("wishModal").style.display="flex";}
+function closeModal(){document.getElementById("wishModal").style.display="none";}
+
+// ✅ GENERATE SHARE LINK
+document.getElementById("generateBtn").addEventListener("click",()=>{
+  const msg=encodeURIComponent(document.getElementById("wishText").value);
+  const from=encodeURIComponent(document.getElementById("wishFrom").value);
+  const link=`${window.location.origin}${window.location.pathname}?msg=${msg}&from=${from}`;
+  document.getElementById("shareLink").value=link;
+  document.getElementById("shareLinkSection").style.display="block";
 });
 
-const snowflakes = [];
-for(let i = 0; i < 150; i++) {
-  snowflakes.push({
-    x: Math.random() * w,
-    y: Math.random() * h,
-    r: Math.random() * 3 + 1,
-    d: Math.random() + 1
-  });
+// ✅ DISPLAY SHARED MESSAGE
+const params=new URLSearchParams(window.location.search);
+if(params.has("msg")){
+  const message=decodeURIComponent(params.get("msg"));
+  const from=decodeURIComponent(params.get("from"));
+  document.getElementById("dynamicMessage").innerHTML=
+    `🎄 ${message}<br><span style="font-size:1rem;color:#ffd166;">— ${from}</span>`;
 }
-
-function drawSnow() {
-  ctx.clearRect(0, 0, w, h);
-  ctx.fillStyle = "white";
-  ctx.beginPath();
-  for(let f of snowflakes) {
-    ctx.moveTo(f.x, f.y);
-    ctx.arc(f.x, f.y, f.r, 0, Math.PI * 2);
-  }
-  ctx.fill();
-  moveSnow();
-}
-
-function moveSnow() {
-  for(let f of snowflakes) {
-    f.y += Math.pow(f.d, 2);
-    if(f.y > h) {
-      f.y = 0;
-      f.x = Math.random() * w;
-    }
-  }
-}
-
-setInterval(drawSnow, 33);
-
-// ✅ ENABLE SOUND AFTER USER INTERACTION
-window.addEventListener("click", () => {
-  const music = document.getElementById("bg-music");
-  music.muted = false;
-  music.play();
-}, { once: true });
 </script>
 
 </body>
