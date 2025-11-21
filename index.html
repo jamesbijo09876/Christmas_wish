@@ -99,8 +99,7 @@
       <p class="lead">Celebrate joy, peace, and love this blessed season.</p>
       <div id="countdown"></div>
 
-      <!-- Updated onclick -->
-      <button class="main-btn" onclick="goToMain()">Create Christmas Wish</button>
+      <button class="main-btn" onclick="showForm()">Create Christmas Wish</button>
     </div>
 
     <div id="wishForm">
@@ -114,7 +113,7 @@
       <button class="main-btn" id="copyBtn" style="display:none;" onclick="copyLink()">Copy Link</button>
     </div>
 
-    <button class="main-btn" id="viewAnother" onclick="goToMain()" style="display:none;">View Another Wish</button>
+    <button class="main-btn" id="viewAnother" onclick="resetPage()" style="display:none;">View Another Wish</button>
 
   </div>
 </div>
@@ -141,20 +140,15 @@ function updateCountdown() {
 setInterval(updateCountdown,1000);
 updateCountdown();
 
-// Music Interaction Fix
+// Music
 window.addEventListener("click",()=>{const m=document.getElementById("bg-music");m.muted=false;m.play();},{once:true});
 
-// Redirect to homepage
-function goToMain() {
-  window.location.href = window.location.origin + window.location.pathname;
-}
-
-// Show form
+// Show Form
 function showForm(){
   document.getElementById("wishForm").style.display="block";
 }
 
-// Create link + send data to Google Sheet
+// Create Wish
 async function createWish(){
   const to = encodeURIComponent(document.getElementById("toName").value);
   const msg = encodeURIComponent(document.getElementById("message").value);
@@ -167,8 +161,10 @@ async function createWish(){
   document.getElementById("copyBtn").style.display="inline-block";
   document.getElementById("viewAnother").style.display="inline-block";
 
+  // New Message Line
   document.getElementById("createdWish").innerHTML = "🎄 Copy the link and send to your loved ones ❤️";
 
+  // Save to Sheet
   if(to && msg && from){
     const data = { to: decodeURIComponent(to), msg: decodeURIComponent(msg), from: decodeURIComponent(from) };
     await fetch("https://script.google.com/macros/s/AKfycbx3cjOy1UBoN8TULp5tJNQD73za35wPFHxAePjuci0HBR8DloTQO34xSpBLtvPlQeTj/exec", {
@@ -179,14 +175,19 @@ async function createWish(){
   }
 }
 
-// Copy link
+// Copy Link
 function copyLink(){
   navigator.clipboard.writeText(document.getElementById("wishLink").innerText);
   alert("Link copied!");
   document.getElementById("createdWish").innerHTML = "✨ Link copied! Now share it with your loved ones ❤️";
 }
 
-// Display wish if URL contains data
+// Reset Page
+function resetPage(){
+  window.location.href = window.location.origin + window.location.pathname;
+}
+
+// Display Wish Screen
 const urlParams = new URLSearchParams(window.location.search);
 if(urlParams.has("to")){
   const to = decodeURIComponent(urlParams.get("to"));
@@ -196,10 +197,9 @@ if(urlParams.has("to")){
   document.getElementById("mainContent").innerHTML =
     `<h1>🎁 A Christmas Wish For ${to}</h1><p class='lead'>${msg}</p><p style='margin-top:20px;'>With Love 🎄<br><strong>${from}</strong></p>`;
   document.getElementById("viewAnother").style.display="inline-block";
-  document.getElementById("wishForm").style.display = "none"; // hide form on shared page
 }
 
-// Snow animation
+// Snow
 const canvas=document.getElementById("snow-canvas");
 const ctx=canvas.getContext("2d");
 let w=canvas.width=window.innerWidth;
