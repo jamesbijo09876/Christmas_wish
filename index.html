@@ -140,15 +140,15 @@ function updateCountdown() {
 setInterval(updateCountdown,1000);
 updateCountdown();
 
-// Music Interaction Fix
+// Music
 window.addEventListener("click",()=>{const m=document.getElementById("bg-music");m.muted=false;m.play();},{once:true});
 
-// Show form
+// Show Form
 function showForm(){
   document.getElementById("wishForm").style.display="block";
 }
 
-// Create link + send data to Google Sheet
+// Create Wish
 async function createWish(){
   const to = encodeURIComponent(document.getElementById("toName").value);
   const msg = encodeURIComponent(document.getElementById("message").value);
@@ -161,38 +161,33 @@ async function createWish(){
   document.getElementById("copyBtn").style.display="inline-block";
   document.getElementById("viewAnother").style.display="inline-block";
 
+  // New Message Line
+  document.getElementById("createdWish").innerHTML = "🎄 Copy the link and send to your loved ones ❤️";
+
+  // Save to Sheet
   if(to && msg && from){
-    document.getElementById("createdWish").innerHTML =
-      `🎄 Message Created Successfully 🎁`;
-
-    // Send data to Google Sheet
-    const data = { 
-      to: decodeURIComponent(to), 
-      msg: decodeURIComponent(msg), 
-      from: decodeURIComponent(from) 
-    };
-
+    const data = { to: decodeURIComponent(to), msg: decodeURIComponent(msg), from: decodeURIComponent(from) };
     await fetch("https://script.google.com/macros/s/AKfycbx3cjOy1UBoN8TULp5tJNQD73za35wPFHxAePjuci0HBR8DloTQO34xSpBLtvPlQeTj/exec", {
-      method: "POST",
-      mode: "no-cors",
+      method: "POST", mode: "no-cors",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(data)
     });
   }
 }
 
-// Copy link
+// Copy Link
 function copyLink(){
   navigator.clipboard.writeText(document.getElementById("wishLink").innerText);
   alert("Link copied!");
+  document.getElementById("createdWish").innerHTML = "✨ Link copied! Now share it with your loved ones ❤️";
 }
 
-// Reset
+// Reset Page
 function resetPage(){
   window.location.href = window.location.origin + window.location.pathname;
 }
 
-// Display wish if URL contains data
+// Display Wish Screen
 const urlParams = new URLSearchParams(window.location.search);
 if(urlParams.has("to")){
   const to = decodeURIComponent(urlParams.get("to"));
@@ -204,7 +199,7 @@ if(urlParams.has("to")){
   document.getElementById("viewAnother").style.display="inline-block";
 }
 
-// Snow animation
+// Snow
 const canvas=document.getElementById("snow-canvas");
 const ctx=canvas.getContext("2d");
 let w=canvas.width=window.innerWidth;
