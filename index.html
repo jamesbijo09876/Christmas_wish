@@ -5,6 +5,15 @@
 <meta name="viewport" content="width=device-width,initial-scale=1" />
 <title>Christmas Countdown</title>
 
+<!-- Microsoft Clarity Tracking Code -->
+<script type="text/javascript">
+    (function(c,l,a,r,i,t,y){
+        c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
+        t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
+        y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
+    })(window, document, "clarity", "script", "uk9ujrx03d");
+</script>
+
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
 
 <style>
@@ -81,15 +90,47 @@
   }
 
   #snow-canvas{position:fixed;inset:0;z-index:0;pointer-events:none;}
+
+  /* FIXED SHARE COUNTER */
+  #shareCountBox{
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background:#ffd166;
+    padding:12px 18px;
+    border-radius:12px;
+    color:#0b1320;
+    font-weight:600;
+    font-size:1rem;
+    display:none;
+    z-index: 9999;
+    box-shadow:0 4px 16px rgba(0,0,0,0.3);
+    animation: fadeIn .4s ease-out;
+    text-align:center;
+  }
+
+  @keyframes fadeIn{
+    from{opacity:0; transform:translateY(-10px);}
+    to{opacity:1; transform:translateY(0);}
+  }
 </style>
 </head>
 <body>
 
 <canvas id="snow-canvas"></canvas>
 
+<!-- Background Music -->
 <audio id="bg-music" autoplay loop muted>
   <source src="assets/audio/polar-express.mp3" type="audio/mp3">
 </audio>
+
+<!-- Santa Ho Ho Ho sound -->
+<audio id="hohoAudio">
+  <source src="assets/audio/hoho.mp3" type="audio/mp3">
+</audio>
+
+<!-- FIXED SHARE COUNTER -->
+<div id="shareCountBox"></div>
 
 <div class="wrap">
   <div class="card">
@@ -140,8 +181,12 @@ function updateCountdown() {
 setInterval(updateCountdown,1000);
 updateCountdown();
 
-// Music
-window.addEventListener("click",()=>{const m=document.getElementById("bg-music");m.muted=false;m.play();},{once:true});
+// Music unmute on click
+window.addEventListener("click",()=>{
+  const m=document.getElementById("bg-music");
+  m.muted=false;
+  m.play();
+},{once:true});
 
 // Show Form
 function showForm(){
@@ -161,7 +206,6 @@ async function createWish(){
   document.getElementById("copyBtn").style.display="inline-block";
   document.getElementById("viewAnother").style.display="inline-block";
 
-  // New Message Line
   document.getElementById("createdWish").innerHTML = "🎄 Copy the link and send to your loved ones ❤️";
 
   // Save to Sheet
@@ -175,19 +219,59 @@ async function createWish(){
   }
 }
 
-// Copy Link
+// Copy Link + Share Counter + HO HO HO SOUND
 function copyLink(){
   navigator.clipboard.writeText(document.getElementById("wishLink").innerText);
-  alert("Link copied!");
-  document.getElementById("createdWish").innerHTML = "✨ Link copied! Now share it with your loved ones ❤️";
+
+  let count = localStorage.getItem("shareCount");
+  count = count ? Number(count) + 1 : 1;
+  localStorage.setItem("shareCount", count);
+
+  const box = document.getElementById("shareCountBox");
+  box.style.display = "block";
+  box.innerHTML = `📤 Share Count: <strong>${count}</strong>`;
+
+  // 🎅 when count hits 5
+  if(count === 5){
+    box.innerHTML = `🎅✨ Santa says:<br><strong>"Ho Ho Ho! Thank you for spreading joy!"</strong>`;
+
+    // play ho ho ho sound
+    const hoho = document.getElementById("hohoAudio");
+    hoho.play();
+
+    // center message area also show Santa message
+    document.getElementById("createdWish").innerHTML =
+      "🎅✨ Santa is proud of you for sharing Christmas happiness! ❤️";
+  }
+  else{
+    document.getElementById("createdWish").innerHTML =
+      "✨ Link copied! Share it with your loved ones ❤️";
+  }
 }
 
 // Reset Page
 function resetPage(){
-  window.location.href = window.location.origin + window.location.pathname;
+  window.history.pushState({}, document.title, window.location.pathname);
+
+  document.getElementById("mainContent").innerHTML = `
+    <h1>Merry Christmas 🎄</h1>
+    <p class="lead">Celebrate joy, peace, and love this blessed season.</p>
+    <div id="countdown"></div>
+    <button class="main-btn" onclick="showForm()">Create Christmas Wish</button>
+  `;
+
+  document.getElementById("wishForm").style.display = "none";
+  document.getElementById("toName").value = "";
+  document.getElementById("message").value = "";
+  document.getElementById("fromName").value = "";
+
+  document.getElementById("wishLink").style.display = "none";
+  document.getElementById("copyBtn").style.display = "none";
+  document.getElementById("createdWish").innerHTML = "";
+  document.getElementById("viewAnother").style.display = "none";
 }
 
-// Display Wish Screen
+// Display Wish Page if URL has a message
 const urlParams = new URLSearchParams(window.location.search);
 if(urlParams.has("to")){
   const to = decodeURIComponent(urlParams.get("to"));
@@ -199,7 +283,7 @@ if(urlParams.has("to")){
   document.getElementById("viewAnother").style.display="inline-block";
 }
 
-// Snow
+// Snow Animation
 const canvas=document.getElementById("snow-canvas");
 const ctx=canvas.getContext("2d");
 let w=canvas.width=window.innerWidth;
